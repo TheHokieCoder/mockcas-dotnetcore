@@ -331,3 +331,6 @@ ASALocalRun/
 
 # Data file containing all mocked users
 userdata.json
+
+# Development version of application settings file
+**/appsettings.development.json
