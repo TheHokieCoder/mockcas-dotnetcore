@@ -157,5 +157,21 @@
 
 			return View(model);
 		}
+
+		/// <summary>
+		///		Razor view page for logging a user out of the single sign-on (SSO) session with the CAS server.
+		/// </summary>
+		/// <returns>
+		///		A Razor view page
+		/// </returns>
+		/// <remarks>
+		///		Because this mock CAS server does not support SSO, this endpoint essentially has no action, hence the message in the Razor view page.
+		/// </remarks>
+		[HttpGet]
+		[Route("logout")]
+		public IActionResult Logout()
+		{
+			return View();
+		}
 	}
 }
