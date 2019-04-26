@@ -203,7 +203,7 @@
 		[Route("serviceValidate")]
 		public IActionResult Cas20Validate([FromQuery]string format, [FromQuery]string service, [FromQuery]string ticket)
 		{
-			if (String.IsNullOrEmpty("format"))
+			if (String.IsNullOrEmpty(format))
 			{
 				// Default to the XML-formatted response per CAS protocol specification
 				format = "xml";
