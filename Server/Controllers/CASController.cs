@@ -4,6 +4,7 @@
 	using Server.Models.Login;
 	using Server.Services;
 	using System;
+	using System.Text;
 	using System.Web;
 
 
@@ -172,6 +173,119 @@
 		public IActionResult Logout()
 		{
 			return View();
+		}
+
+		/// <summary>
+		///		The service ticket validation endpoint for v2.0 of the CAS protocol.
+		/// </summary>
+		/// <param name="format">
+		///		The format of the validation response (JSON or XML)
+		/// </param>
+		/// <param name="service">
+		///		The identifier of the service for which the ticket was issued
+		/// </param>
+		/// <param name="ticket">
+		///		The service ticket issued by the "/login" endpoint
+		/// </param>
+		/// <returns>
+		///		A response representing the success or failure of the service ticket validation in either JSON or XML format
+		/// </returns>
+		/// <remarks>
+		///		The following are some important differences between the CAS v2.0 protocol specification and this server implementation:
+		///		
+		///		- The "renew" parameter is not supported as single sign-on (SSO) is not supported. Therefore, all service tickets will have been
+		///		  generated from the presentation of credentials and never from a SSO session.
+		///		- The "pgtUrl" parameter is not supported as proxies are not supported.
+		///		- The "service" parameter is not verified against the service parameter that was supplied when the service ticket was generated. This
+		///		  is a mock CAS server and that level of security would be overkill.
+		///	</remarks>
+		[HttpGet]
+		[Route("serviceValidate")]
+		public IActionResult Cas20Validate([FromQuery]string format, [FromQuery]string service, [FromQuery]string ticket)
+		{
+			if (String.IsNullOrEmpty("format"))
+			{
+				// Default to the XML-formatted response per CAS protocol specification
+				format = "xml";
+			}
+			else
+			{
+				// Force the specified format to all lowercase characters
+				format = format.ToLower();
+			}
+
+			if (format != "json" && format != "xml")
+			{
+				// The requested format is not valid/supported, so return an error in the default XML format
+				return Content(new Models.Cas20.AuthenticationFailureResponse(Models.Cas20.AuthenticationFailureCode.INVALID_REQUEST,
+					"Specified response format is invalid.").ToJSON(), "application/json", Encoding.UTF8);
+			}
+
+			if (String.IsNullOrEmpty(service))
+			{
+				// The required parameter "service" was not specified, thus the request is invalid.
+				Models.Cas20.AuthenticationFailureResponse failureResponse = new Models.Cas20.AuthenticationFailureResponse(
+					Models.Cas20.AuthenticationFailureCode.INVALID_REQUEST, "Required parameter \"service\" was not specified.");
+				if (format == "json")
+				{
+					// Return the error in the JSON format
+					return Content(failureResponse.ToJSON(), "application/json", Encoding.UTF8);
+				}
+				else
+				{
+					// Return the error in the only other format, XML
+					return Content(failureResponse.ToXML(), "application/xml", Encoding.UTF8);
+				}
+			}
+
+			if (String.IsNullOrEmpty(ticket))
+			{
+				// The required parameter "ticket" was not specified, thus the request is invalid.
+				Models.Cas20.AuthenticationFailureResponse failureResponse = new Models.Cas20.AuthenticationFailureResponse(
+					Models.Cas20.AuthenticationFailureCode.INVALID_REQUEST, "Required parameter \"ticket\" was not specified.");
+				if (format == "json")
+				{
+					// Return the error in the JSON format
+					return Content(failureResponse.ToJSON(), "application/json", Encoding.UTF8);
+				}
+				else
+				{
+					// Return the error in the only other format, XML
+					return Content(failureResponse.ToXML(), "application/xml", Encoding.UTF8);
+				}
+			}
+
+			// All request validation has passed, so now validate the specified service ticket
+			string username = _ticketService.GetTicket(ticket);
+			if (String.IsNullOrEmpty(username))
+			{
+				// The specified service ticket does not exist in the ticket service cache, so it is invalid
+				Models.Cas20.AuthenticationFailureResponse failureResponse = new Models.Cas20.AuthenticationFailureResponse(
+					Models.Cas20.AuthenticationFailureCode.INVALID_TICKET, "Ticket " + ticket + " not recognized.");
+				if (format == "json")
+				{
+					// Return the error in the JSON format
+					return Content(failureResponse.ToJSON(), "application/json", Encoding.UTF8);
+				}
+				else
+				{
+					// Return the error in the only other format, XML
+					return Content(failureResponse.ToXML(), "application/xml", Encoding.UTF8);
+				}
+			}
+
+			// The identity linked to the service ticket is now known, so send an authentication success response
+			Models.Cas20.AuthenticationSuccessResponse successResponse = new Models.Cas20.AuthenticationSuccessResponse(username);
+			if (format == "json")
+			{
+				// Return the response in the JSON format
+				return Content(successResponse.ToJSON(), "application/json", Encoding.UTF8);
+			}
+			else
+			{
+				// Return the error in the only other format, XML
+				return Content(successResponse.ToXML(), "application/xml", Encoding.UTF8);
+			}
 		}
 	}
 }
