@@ -111,7 +111,7 @@
 		/// </returns>
 		[HttpPost]
 		[Route("login")]
-		public IActionResult Index(LoginModel model)
+		public IActionResult Login(LoginModel model)
 		{
 			if (ModelState.IsValid)
 			{
