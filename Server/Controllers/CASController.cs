@@ -170,8 +170,16 @@
 		/// </remarks>
 		[HttpGet]
 		[Route("logout")]
-		public IActionResult Logout()
-		{
+		public IActionResult Logout([FromQuery]string service, [FromQuery]string url)
+		{	
+			if (!String.IsNullOrEmpty(url))
+			{
+				ViewBag.RedirectURL = url;
+			}
+			if (!String.IsNullOrEmpty(service))
+			{
+				ViewBag.RedirectURL = service;
+			}
 			return View();
 		}
 

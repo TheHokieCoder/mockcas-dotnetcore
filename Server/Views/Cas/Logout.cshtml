@@ -7,3 +7,9 @@
 	cannot maintain state about previously authenticated users. As a result,<br>
 	&ldquo;logging out&rdquo; is not a supported action and does not perform any action.
 </p>
+@if (!String.IsNullOrEmpty(ViewBag.RedirectURL))
+{
+<p>
+	Return to the application at <a href="@ViewBag.RedirectURL">@ViewBag.RedirectURL</a>
+</p>
+}
