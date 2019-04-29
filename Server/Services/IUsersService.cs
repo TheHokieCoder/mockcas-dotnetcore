@@ -18,5 +18,16 @@
 		///		A Boolean indicating if authentication was successful
 		/// </returns>
 		bool Authenticate(string username, string password);
+
+		/// <summary>
+		///		Retrieves the user with the specified username from the collection.
+		/// </summary>
+		/// <param name="username">
+		///		The username of the user
+		/// </param>
+		/// <returns>
+		///		A <see cref="Models.User"/> object containing all properties of the user
+		/// </returns>
+		Models.User GetUser(string username);
 	}
 }

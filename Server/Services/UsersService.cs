@@ -50,6 +50,34 @@
 		}
 
 		/// <summary>
+		///		Retrieves the user with the specified username from the collection.
+		/// </summary>
+		/// <param name="username">
+		///		The username of the user
+		/// </param>
+		/// <returns>
+		///		A <see cref="Models.User"/> object containing all properties of the user
+		/// </returns>
+		public Models.User GetUser(string username)
+		{
+			if (_users != null)
+			{
+				// Iterate over each user in the collection
+				foreach (Models.User user in _users)
+				{
+					if (String.Compare(user.Username, username, true) == 0)
+					{
+						// The user has been found, so return the object to the caller
+						return user;
+					}
+				}
+			}
+
+			// No users in the collection, so the user is not found
+			return null;
+		}
+
+		/// <summary>
 		///		Default constructor that receives an instance of the configuration provider via dependency injection
 		/// </summary>
 		/// <param name="configuration">

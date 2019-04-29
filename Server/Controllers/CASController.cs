@@ -4,6 +4,7 @@
 	using Server.Models.Login;
 	using Server.Services;
 	using System;
+	using System.Collections.Generic;
 	using System.Text;
 	using System.Web;
 
@@ -284,6 +285,98 @@
 
 			// The identity linked to the service ticket is now known, so send an authentication success response
 			Models.Cas20.AuthenticationSuccessResponse successResponse = new Models.Cas20.AuthenticationSuccessResponse(username);
+			if (format == "json")
+			{
+				// Return the response in the JSON format
+				return Content(successResponse.ToJSON(), "application/json", Encoding.UTF8);
+			}
+			else
+			{
+				// Return the error in the only other format, XML
+				return Content(successResponse.ToXML(), "application/xml", Encoding.UTF8);
+			}
+		}
+
+
+		[HttpGet]
+		[Route("p3/serviceValidate")]
+		public IActionResult Cas30Validate([FromQuery]string format, [FromQuery]string service, [FromQuery]string ticket)
+		{
+			if (String.IsNullOrEmpty(format))
+			{
+				// Default to the XML-formatted response per CAS protocol specification
+				format = "xml";
+			}
+			else
+			{
+				// Force the specified format to all lowercase characters
+				format = format.ToLower();
+			}
+
+			if (format != "json" && format != "xml")
+			{
+				// The requested format is not valid/supported, so return an error in the default XML format
+				return Content(new Models.Cas30.AuthenticationFailureResponse(Models.Cas30.AuthenticationFailureCode.INVALID_REQUEST,
+					"Specified response format is invalid.").ToJSON(), "application/json", Encoding.UTF8);
+			}
+
+			if (String.IsNullOrEmpty(service))
+			{
+				// The required parameter "service" was not specified, thus the request is invalid.
+				Models.Cas30.AuthenticationFailureResponse failureResponse = new Models.Cas30.AuthenticationFailureResponse(
+					Models.Cas30.AuthenticationFailureCode.INVALID_REQUEST, "Required parameter \"service\" was not specified.");
+				if (format == "json")
+				{
+					// Return the error in the JSON format
+					return Content(failureResponse.ToJSON(), "application/json", Encoding.UTF8);
+				}
+				else
+				{
+					// Return the error in the only other format, XML
+					return Content(failureResponse.ToXML(), "application/xml", Encoding.UTF8);
+				}
+			}
+
+			if (String.IsNullOrEmpty(ticket))
+			{
+				// The required parameter "ticket" was not specified, thus the request is invalid.
+				Models.Cas30.AuthenticationFailureResponse failureResponse = new Models.Cas30.AuthenticationFailureResponse(
+					Models.Cas30.AuthenticationFailureCode.INVALID_REQUEST, "Required parameter \"ticket\" was not specified.");
+				if (format == "json")
+				{
+					// Return the error in the JSON format
+					return Content(failureResponse.ToJSON(), "application/json", Encoding.UTF8);
+				}
+				else
+				{
+					// Return the error in the only other format, XML
+					return Content(failureResponse.ToXML(), "application/xml", Encoding.UTF8);
+				}
+			}
+
+			// All request validation has passed, so now validate the specified service ticket
+			string username = _ticketService.GetTicket(ticket);
+			if (String.IsNullOrEmpty(username))
+			{
+				// The specified service ticket does not exist in the ticket service cache, so it is invalid
+				Models.Cas30.AuthenticationFailureResponse failureResponse = new Models.Cas30.AuthenticationFailureResponse(
+					Models.Cas30.AuthenticationFailureCode.INVALID_TICKET, "Ticket " + ticket + " not recognized.");
+				if (format == "json")
+				{
+					// Return the error in the JSON format
+					return Content(failureResponse.ToJSON(), "application/json", Encoding.UTF8);
+				}
+				else
+				{
+					// Return the error in the only other format, XML
+					return Content(failureResponse.ToXML(), "application/xml", Encoding.UTF8);
+				}
+			}
+
+			Models.User user = _usersService.GetUser(username);
+			// The identity linked to the service ticket is now known, so send an authentication success response
+			Models.Cas30.AuthenticationSuccessResponse successResponse = new Models.Cas30.AuthenticationSuccessResponse(user.Username,
+				user.Attributes);
 			if (format == "json")
 			{
 				// Return the response in the JSON format
