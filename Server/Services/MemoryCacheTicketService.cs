@@ -25,7 +25,18 @@
 			if (_tickets != null)
 			{
 				bool ticketFound = _tickets.TryGetValue(ticket, out string username);
-				return ticketFound ? username : String.Empty;
+				
+				if (ticketFound)
+				{
+					// Per CAS protocol specification, service tickets must be invalidated after the first validation attempt, so remove the ticket
+					// from the cache to prevent future validation
+					_tickets.Remove(ticket);
+					// Return the username associated with the ticket to the caller
+					return username;
+				}
+
+				// The specified ticket could not be found, so it is expired or invalid, and therefore there is no associated identity to return
+				return null;
 			}
 			else
 			{
