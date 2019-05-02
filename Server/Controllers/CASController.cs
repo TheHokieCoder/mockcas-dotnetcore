@@ -60,7 +60,18 @@
 				return new Models.Cas10.AuthenticationFailureResponse().ToString();
 			}
 
-			return new Models.Cas10.AuthenticationSuccessResponse("blallen1").ToString();
+			// All request validation has passed, so now validate the specified service ticket
+			string username = _ticketService.GetTicket(ticket);
+			if (String.IsNullOrEmpty(username))
+			{
+				// The specified service ticket does not exist in the ticket service cache, so it is invalid
+				return new Models.Cas10.AuthenticationFailureResponse().ToString();
+			}
+			else
+			{
+				// The identity linked to the service ticket is now known, so send an authentication success response
+				return new Models.Cas10.AuthenticationSuccessResponse(username).ToString();
+			}
 		}
 
 		/// <summary>
