@@ -299,8 +299,10 @@
 				}
 			}
 
+			Models.User user = _usersService.GetUser(username);
 			// The identity linked to the service ticket is now known, so send an authentication success response
-			Models.Cas20.AuthenticationSuccessResponse successResponse = new Models.Cas20.AuthenticationSuccessResponse(username);
+			Models.Cas30.AuthenticationSuccessResponse successResponse = new Models.Cas30.AuthenticationSuccessResponse(user.Username,
+				user.Attributes);
 			if (format == "json")
 			{
 				// Return the response in the JSON format
