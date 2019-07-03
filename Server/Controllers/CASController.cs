@@ -144,8 +144,13 @@
 							string newServiceTicket = SERVICE_TICKET_PREFIX + Guid.NewGuid().ToString().ToUpper();
 							// Store the service ticket with the ticket service
 							_ticketService.InsertTicket(newServiceTicket, model.Username);
+							// Build the redirect URL by appending a "ticket" parameter to the service URL provided by the CAS client
+							UriBuilder redirectURL = new UriBuilder(model.Service);
+							var query = HttpUtility.ParseQueryString(redirectURL.Query);
+							query["ticket"] = newServiceTicket;
+							redirectURL.Query = query.ToString();
 							// Redirect the user to the service with the new service ticket
-							return Redirect(model.Service + "?ticket=" + newServiceTicket);
+							return Redirect(redirectURL.ToString());
 						}
 						else
 						{
